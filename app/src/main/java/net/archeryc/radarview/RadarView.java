@@ -1,232 +1,221 @@
 package net.archeryc.radarview;
 
-import android.animation.Animator;
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.support.annotation.Nullable;
+import android.graphics.Point;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Interpolator;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * 一句话功能简述 自定义雷达页面
+ * 一句话功能简述
  * 功能详细描述
  *
- * @author 杨晨 on 2017/6/16 13:57
+ * @author 杨晨 on 2017/6/22 08:48
  * @e-mail 247067345@qq.com
  * @see [相关类/方法](可选)
  */
 
-public class RadarView extends View {
+public class RadarView extends FrameLayout implements RadarLoadingView.OnLoadingStateChangedListener {
 
     private static final int DEFAULT_WIDTH = 400;
     private static final int DEFAULT_HEIGHT = 400;
-    private static final int CIRCLE_NUM=3;
-    private Context mContext;
+
+    private static final int CIRCLE_NUM = 5;
+
     private int defaultWidth;
     private int defaultHeight;
-    private Paint[] circlePaints;
-    private ObjectAnimator[] circleAnimators;
-    private float[] animatorValues;
+
+    private Context mContext;
+
     private float[] circleRadius;
-    private float[] displayCircleRadius;
-    private boolean isPlayAnimator=false;
-    private boolean shouldStopAnimator=false;
+
+    private Paint circlePaint;
+
+    private boolean isDrawBgCircle = false;
+
+    private RadarLoadingView radarLoadingView;
+    private List<RadarUserView> radarUserViews;
+    private List<RadarUserEntity> radarUserEntities;
+
+    private List<Point> circlePositions;
 
     public RadarView(Context context) {
-        this(context,null);
+        this(context, null);
     }
 
-    public RadarView(Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs,0);
+    public RadarView(Context context, AttributeSet attrs) {
+        this(context, attrs, 0);
     }
 
-    public RadarView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public RadarView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        this.mContext = context;
         init();
-        initPaint();
-    }
-
-    private void initPaint() {
-        circlePaints = new Paint[CIRCLE_NUM];
-        for (int i = 0; i< circlePaints.length; i++){
-            circlePaints[i] = new Paint(Paint.ANTI_ALIAS_FLAG);
-            circlePaints[i].setStrokeWidth(dip2px(mContext,1));
-            circlePaints[i].setColor(Color.WHITE);
-            circlePaints[i].setStyle(Paint.Style.STROKE);
-        }
     }
 
     private void init() {
-        mContext=getContext();
+        circleRadius = new float[CIRCLE_NUM];
+        circlePositions = new ArrayList<>();
+        initPaint();
         defaultWidth = dip2px(mContext, DEFAULT_WIDTH);
         defaultHeight = dip2px(mContext, DEFAULT_HEIGHT);
+        radarLoadingView = new RadarLoadingView(mContext);
+        radarLoadingView.setOnLoadingStateChangedListener(this);
+        addView(radarLoadingView, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+    }
+
+    private void initPosition() {
+
+        circlePositions.clear();
+        circlePositions.add(calculatePointPosition(1,30));
+        circlePositions.add(calculatePointPosition(2,90));
+        circlePositions.add(calculatePointPosition(3,180));
+        circlePositions.add(calculatePointPosition(2,280));
+
+    }
+
+
+    private void initPaint() {
+        circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        circlePaint.setColor(Color.WHITE);
+        circlePaint.setStyle(Paint.Style.STROKE);
+        circlePaint.setStrokeWidth(dip2px(mContext, 1));
+    }
+
+    private void initCircleRadius() {
+        circleRadius[0] = dip2px(mContext, 34);
+        circleRadius[1] = dip2px(mContext, 68);
+        circleRadius[2] = dip2px(mContext, 118);
+        circleRadius[3] = getMeasuredWidth() / 2;
+        circleRadius[4] = dip2px(mContext, 248);
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        Log.d("yc", "onLayout:" + "left===>" + left + "top====>" + top + "right====>" + right + "bottom===>" + bottom);
+        if (radarUserViews != null && radarUserViews.size() > 0) {
+            int width = radarUserViews.get(0).getMeasuredWidth();
+            int height = radarUserViews.get(0).getMeasuredHeight();
+            Log.d("yc", "width===>" + width + "height===>" + height);
+            for (int i=0;i<radarUserViews.size();i++){
+                if (i<circlePositions.size()) {
+                    Point point = circlePositions.get(i);
+                    radarUserViews.get(i).layout(point.x - width / 2, point.y - height / 2, point.x + width / 2, point.y + height / 2);
+                }
+            }
+        }
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int resultWidth;
-        int modeWidth = MeasureSpec.getMode(widthMeasureSpec);
-        int sizeWidth = MeasureSpec.getSize(widthMeasureSpec);
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        initCircleRadius();
+        initPosition();
+    }
 
-        if (modeWidth == MeasureSpec.EXACTLY)
-        {
-            resultWidth = sizeWidth;
+    public void setUserData(List<RadarUserEntity> userEntities) {
+        if (radarUserViews == null) {
+            radarUserViews = new ArrayList<>();
         }
-        else
-        {
-            resultWidth = defaultWidth;
-            if (modeWidth == MeasureSpec.AT_MOST)
-            {
-                resultWidth = Math.min(resultWidth, sizeWidth);
-            }
+        this.radarUserEntities = userEntities;
+        for (int i = 0; i < userEntities.size(); i++) {
+            RadarUserEntity userEntity = userEntities.get(i);
+            RadarUserView radarUserView = new RadarUserView(mContext);
+            radarUserViews.add(radarUserView);
         }
-
-        int resultHeight;
-        int modeHeight = MeasureSpec.getMode(heightMeasureSpec);
-        int sizeHeight = MeasureSpec.getSize(heightMeasureSpec);
-        if (modeHeight == MeasureSpec.EXACTLY)
-        {
-            resultHeight = sizeHeight;
-        }
-        else
-        {
-            resultHeight = defaultHeight;
-            if (modeHeight == MeasureSpec.AT_MOST)
-            {
-                resultHeight = Math.min(resultHeight, sizeHeight);
-            }
-        }
-        setMeasuredDimension(resultWidth, resultHeight);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (animatorValues!=null&&circlePaints!=null) {
-            if (isPlayAnimator()) {
-                for (int i = 0; i < CIRCLE_NUM; i++) {
-                    canvas.drawCircle(getMeasuredWidth() / 2, getMeasuredHeight() / 2, animatorValues[i], circlePaints[i]);
-                }
-            }else{
-                for (int i = 0; i < CIRCLE_NUM; i++) {
-                    circlePaints[i].setAlpha(255);
-                    canvas.drawCircle(getMeasuredWidth() / 2, getMeasuredHeight() / 2, displayCircleRadius[i], circlePaints[i]);
-                }
+        if (isDrawBgCircle()) {
+            for (int i = 0; i < CIRCLE_NUM; i++) {
+                circlePaint.setAlpha((int) (255 * (1 - (float) i / CIRCLE_NUM)));
+                canvas.drawCircle(getMeasuredWidth() / 2, getMeasuredHeight() / 2, circleRadius[i], circlePaint);
             }
         }
     }
 
-
-    public void showLoading(){
-        post(new Runnable() {
-            @Override
-            public void run() {
-                startAnimator();
-            }
-        });
-    }
     /**
-     * 显示正在加载状态
+     * 显示加载动画
      */
-    private void startAnimator() {
-        setPlayAnimator(true);
-        circleAnimators=new ObjectAnimator[CIRCLE_NUM];
-        animatorValues = new float[CIRCLE_NUM];
-        circleRadius = new float[CIRCLE_NUM];
-        displayCircleRadius = new float[CIRCLE_NUM];
+    public void showLoading() {
+        radarLoadingView.showLoading();
+    }
 
-        for (int i=0;i<CIRCLE_NUM;i++){
-            circleRadius[i]=getMeasuredWidth()/2-i*getMeasuredWidth()/((CIRCLE_NUM)*2);
-            displayCircleRadius[i]=getMeasuredWidth()/2/5*(i+1);
-            circleAnimators[i] = ObjectAnimator
-                    .ofFloat(this, "yc", circleRadius[i] / 3.5f, getMeasuredWidth()/(2+(float)i*i*i/4))
-                    .setDuration(1400);
-            circleAnimators[i].setRepeatCount(ValueAnimator.INFINITE);
-            circleAnimators[i].setInterpolator(new AccelerateInterpolator((float) (i+1)/CIRCLE_NUM));
-            circleAnimators[i].start();
-            final int finalI = i;
-            circleAnimators[i].addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    animatorValues[finalI] = (Float) animation.getAnimatedValue();
-//                    Log.d("yc", finalI + "===>" + animatorValues[finalI]/
-//                            (getMeasuredWidth()/2));
-                    float percent = (animatorValues[finalI]-circleRadius[finalI]/3.5f) / (getMeasuredWidth()/(2+(float)finalI*finalI*finalI/4)-circleRadius[finalI]/3.5f);
-                    int alpha;
-                    if (percent<0.5f){
-                        alpha= (int) (255*(percent*2)*(1-(float)finalI/4));
-                    }else{
-                        alpha= (int) (255*(1-percent)*2*(1-(float)finalI/4));
-                    }
-//                    Log.d("yc", "i===>"+finalI+"percent===>" + percent + "alpha====>" + alpha);
-                    circlePaints[finalI].setAlpha(alpha);
-                    invalidate();
-                }
-            });
-            circleAnimators[i].addListener(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(Animator animation) {
-                    Log.d("yc","onAnimationStart");
-                }
+    /**
+     * 停止加载动画
+     */
+    public void stopLoading() {
+        radarLoadingView.stopLoading();
+    }
 
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    Log.d("yc","onAnimationEnd");
-                }
 
-                @Override
-                public void onAnimationCancel(Animator animation) {
-                    Log.d("yc","onAnimationCancel");
-                }
+    @Override
+    public void onLoadingStart() {
+        Log.d("yc", "onLoadingStart");
+        removeAllViews();
+        addView(radarLoadingView);
+        setDrawBgCircle(false);
+        invalidate();
+    }
 
-                @Override
-                public void onAnimationRepeat(Animator animation) {
-                    Log.d("yc","onAnimationRepeat");
-                    //判断是否终止了动画，保证一次动画可以完整走完
-                    if (isShouldStopAnimator()){
-                        setShouldStopAnimator(false);
-                        setPlayAnimator(false);
-                        ObjectAnimator objectAnimator= (ObjectAnimator) animation;
-                        objectAnimator.removeAllUpdateListeners();
-                        objectAnimator.removeAllListeners();
-                        objectAnimator.cancel();
-                    }
-                }
-            });
-
+    @Override
+    public void onLoadingStop() {
+        Log.d("yc", "onLoadingStop");
+        removeAllViews();
+        for (RadarUserView radarUserView : radarUserViews) {
+            addView(radarUserView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
+        requestLayout();
+        setDrawBgCircle(true);
+        invalidate();
     }
 
-    public void stopLoading(){
-        setShouldStopAnimator(true);
+    public boolean isDrawBgCircle() {
+        return isDrawBgCircle;
     }
 
-    public boolean isShouldStopAnimator() {
-        return shouldStopAnimator;
+    public void setDrawBgCircle(boolean drawBgCircle) {
+        isDrawBgCircle = drawBgCircle;
     }
 
-    public void setShouldStopAnimator(boolean shouldStopAnimator) {
-        this.shouldStopAnimator = shouldStopAnimator;
-    }
-
-    public boolean isPlayAnimator() {
-        return isPlayAnimator;
-    }
-
-    public void setPlayAnimator(boolean playAnimator) {
-        isPlayAnimator = playAnimator;
-    }
-
-    private int dip2px(Context context, float dipValue)
-    {
+    private int dip2px(Context context, float dipValue) {
         final float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dipValue * scale + 0.5f);
     }
+
+    /**
+     *
+     * @param degree 0-360
+     * @return
+     */
+    private Point calculatePointPosition(int circlePosition,int degree) {
+        int centerX = getMeasuredWidth() / 2;
+        int centerY = getMeasuredHeight() / 2;
+        Point point = new Point();
+        if (degree >= 0 && degree < 90) {
+            point.x = centerX + (int) (circleRadius[circlePosition] * Math.sin(Math.PI * (float) 60 / 180));
+            point.y = centerY - (int) (circleRadius[circlePosition] * Math.cos(Math.PI * 60 / 180));
+        } else if (degree >= 90 && degree < 180) {
+            point.x = centerX + (int) (circleRadius[circlePosition] * Math.sin(Math.PI * (float) 60 / 180));
+            point.y = centerY + (int) (circleRadius[circlePosition] * Math.cos(Math.PI * 60 / 180));
+        } else if (degree >= 180 && degree <= 270) {
+            point.x = centerX - (int) (circleRadius[circlePosition] * Math.sin(Math.PI * (float) 60 / 180));
+            point.y = centerY + (int) (circleRadius[circlePosition] * Math.cos(Math.PI * 60 / 180));
+        } else if (degree >= 270 && degree <= 360) {
+            point.x = centerX - (int) (circleRadius[circlePosition] * Math.sin(Math.PI * (float) 60 / 180));
+            point.y = centerY - (int) (circleRadius[circlePosition] * Math.cos(Math.PI * 60 / 180));
+        }
+        return point;
+    }
+
 }
