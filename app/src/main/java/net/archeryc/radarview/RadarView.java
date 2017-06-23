@@ -109,6 +109,7 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
                 if (i<circlePositions.size()) {
                     Point point = circlePositions.get(i);
                     radarUserViews.get(i).layout(point.x - width / 2, point.y - height / 2, point.x + width / 2, point.y + height / 2);
+                    radarUserViews.get(i).startRipple();
                 }
             }
         }
