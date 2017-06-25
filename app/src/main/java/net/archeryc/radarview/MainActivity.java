@@ -32,6 +32,6 @@ public class MainActivity extends AppCompatActivity {
                 radarView.stopLoading();
                 radarView.setUserData(radarUserEntities);
             }
-        }, 3000);
+        }, 1000);
     }
 }

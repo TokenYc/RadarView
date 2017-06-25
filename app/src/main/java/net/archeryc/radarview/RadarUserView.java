@@ -55,7 +55,7 @@ public class RadarUserView extends FrameLayout {
     }
 
     public void startRipple() {
-        rippleView.initAnimator((getMeasuredWidth()-dip2px(mContext,8)) / 2, getMeasuredWidth() / 2, 255);
+        rippleView.initAnimator((getMeasuredWidth()-dip2px(mContext,8)) / 2, getMeasuredWidth() / 2, 0);
         rippleView.startRipple();
     }
 

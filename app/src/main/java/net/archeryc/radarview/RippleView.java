@@ -12,6 +12,7 @@ import android.graphics.Paint;
 import android.graphics.RadialGradient;
 import android.graphics.Shader;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 
@@ -49,16 +50,17 @@ public class RippleView extends View  {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-//        mPaint.setAlpha(mAlpha);
+        mPaint.setAlpha(mAlpha);
         if (gradient==null) {
-            gradient = new RadialGradient(mX, mY, mRadius, Color.parseColor("#99ffffff"), Color.parseColor("#04ffffff"), Shader.TileMode.CLAMP);
+            gradient = new RadialGradient(getWidth()/2, getWidth()/2, mRadius, Color.parseColor("#ddffffff"), Color.parseColor("#04ffffff"), Shader.TileMode.CLAMP);
         }else{
             float scale=(float)mRadius/(float)minRadius;
-            matrix.setScale(scale,scale,mRadius/2,mRadius/2);
+            Log.d("yc", "scale==>" + scale+"0.5width===>"+getWidth()/2);
+            matrix.setScale(scale,scale,getWidth()/2,getWidth()/2);
             gradient.setLocalMatrix(matrix);
         }
         mPaint.setShader(gradient);
-        canvas.drawCircle(mX, mY, mRadius, mPaint);
+        canvas.drawCircle(getWidth()/2, getWidth()/2, mRadius, mPaint);
     }
 
     @Override
@@ -105,7 +107,6 @@ public class RippleView extends View  {
     public void setCenterPoint(int x, int y) {
         mX = x;
         mY = y;
-
     }
 
     public void initAnimator(int minRadius, int maxRadius, int alpha) {
@@ -113,12 +114,12 @@ public class RippleView extends View  {
         ObjectAnimator radiusAnimator = ObjectAnimator.ofInt(this, "RippleRadius", minRadius, maxRadius,minRadius);
         radiusAnimator.setRepeatMode(ValueAnimator.RESTART);
         radiusAnimator.setRepeatCount(ValueAnimator.INFINITE);
-        ObjectAnimator alphaAnimator = ObjectAnimator.ofInt(this, "RippleAlpha", alpha, 200,alpha);
+        ObjectAnimator alphaAnimator = ObjectAnimator.ofInt(this, "RippleAlpha", 140, 255,140);
         alphaAnimator.setRepeatMode(ValueAnimator.RESTART);
         alphaAnimator.setRepeatCount(ValueAnimator.INFINITE);
         mAnimator = new AnimatorSet();
         mAnimator.playTogether(radiusAnimator, alphaAnimator);
-        mAnimator.setDuration(2000);
+        mAnimator.setDuration(3000);
         mAnimator.setInterpolator(new AccelerateInterpolator());
     }
 }
