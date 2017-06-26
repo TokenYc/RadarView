@@ -47,6 +47,10 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
 
     private List<Point> circlePositions;
 
+    private Random random;
+
+    private RippleView.OnAnimatorEndListener mOnAnimatorEndListener;
+
     public RadarView(Context context) {
         this(context, null);
     }
@@ -112,21 +116,27 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
                     radarUserViews.get(i).layout(point.x - width / 2, point.y - height / 2, point.x + width / 2, point.y + height / 2);
                 }
             }
-                    radarUserViews.get(0).startRipple(null);
-//            startRandomRipple();
+            startRandomRipple();
         }
     }
 
     private void startRandomRipple() {
-        Random random = new Random();
+        if (random==null) {
+            random = new Random();
+        }
         int position=random.nextInt(radarUserViews.size());
-        RadarUserView radarUserView = radarUserViews.get(position);
-        radarUserView.startRipple(new RippleView.OnAnimatorEndListener() {
-            @Override
-            public void onAnimatorEnd() {
-                startRandomRipple();
-            }
-        });
+        final RadarUserView radarUserView = radarUserViews.get(position);
+
+        if (mOnAnimatorEndListener==null){
+            mOnAnimatorEndListener=new RippleView.OnAnimatorEndListener() {
+                @Override
+                public void onAnimatorEnd() {
+                    radarUserView.stopRipple();
+                    startRandomRipple();
+                }
+            };
+        }
+        radarUserView.startRipple(mOnAnimatorEndListener);
     }
 
     @Override

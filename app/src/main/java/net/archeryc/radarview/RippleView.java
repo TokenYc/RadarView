@@ -34,7 +34,12 @@ public class RippleView extends View {
     private int minRadius;
     private int mAvatarRadius;
     private int mCircleAlpha;
+    private ObjectAnimator radiusAnimator;
+    private ObjectAnimator alphaAnimator;
+    private ObjectAnimator circleAlphaAnimator;
     private OnAnimatorEndListener mOnAnimatorEndListener;
+    private AccelerateInterpolator accelerateInterpolator;
+    private Animator.AnimatorListener animatorListener;
 
     public RippleView(Context context) {
         this(context, null);
@@ -58,15 +63,15 @@ public class RippleView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        Log.d("yc","getwidth/2===>"+getWidth()/2+"mRadius===>"+mRadius);
+        if (minRadius <= 0) {
+            return;
+        }
         mRipplePaint.setAlpha(mAlpha);
         if (gradient == null) {
-            gradient = new RadialGradient(getWidth() / 2, getWidth() / 2, mRadius, Color.parseColor("#ffffffff"), Color.parseColor("#06ffffff"), Shader.TileMode.CLAMP);
+            gradient = new RadialGradient(getWidth() / 2, getWidth() / 2, minRadius,
+                    Color.parseColor("#ffffffff"), Color.parseColor("#06ffffff"), Shader.TileMode.CLAMP);
         } else {
             float scale = (float) mRadius / (float) minRadius;
-            Log.d("yc","getwidth/2===>"+getWidth()/2+"mRadius===>"+mRadius+"scale===>"+scale);
-
-//            Log.d("yc", "scale==>" + scale + "0.5width===>" + getWidth() / 2);
             matrix.setScale(scale, scale, getWidth() / 2, getWidth() / 2);
             gradient.setLocalMatrix(matrix);
         }
@@ -97,13 +102,16 @@ public class RippleView extends View {
     }
 
     public void startRipple() {
-        if (mAnimator != null)
+        if (mAnimator != null) {
             mAnimator.start();
+        }
     }
 
     public void stopRipple() {
-        if (mAnimator != null)
+        if (mAnimator != null) {
             mAnimator.end();
+            mAnimator.cancel();
+        }
     }
 
     //设置水波纹半径
@@ -132,41 +140,50 @@ public class RippleView extends View {
     public void initAnimator(int minRadius, int maxRadius, int avatarRadius, int alpha) {
         this.minRadius = minRadius;
         this.mAvatarRadius = avatarRadius;
-        Log.d("avatar", "avatarRadius===>" + avatarRadius);
-        Log.d("yc", "minRadius===>" + minRadius + "maxRadius===>" + maxRadius);
-        ObjectAnimator radiusAnimator = ObjectAnimator.ofInt(this, "RippleRadius", minRadius, maxRadius, minRadius);
-        ObjectAnimator alphaAnimator = ObjectAnimator.ofInt(this, "RippleAlpha", 140, 255, 140);
-        ObjectAnimator circleAlphaAnimator = ObjectAnimator.ofInt(this, "CircleAlpha", 0, 255, 0);
+        radiusAnimator = ObjectAnimator.ofInt(this, "RippleRadius", minRadius, maxRadius, minRadius);
+        alphaAnimator = ObjectAnimator.ofInt(this, "RippleAlpha", 140, 255, 140);
+        circleAlphaAnimator = ObjectAnimator.ofInt(this, "CircleAlpha", 0, 255, 0);
 
+//        radiusAnimator.setRepeatMode(ValueAnimator.RESTART);
+//        radiusAnimator.setRepeatCount(ValueAnimator.INFINITE);
+//        alphaAnimator.setRepeatMode(ValueAnimator.RESTART);
+//        alphaAnimator.setRepeatCount(ValueAnimator.INFINITE);
+//        circleAlphaAnimator.setRepeatMode(ValueAnimator.RESTART);
+//        circleAlphaAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        if (accelerateInterpolator==null){
+            accelerateInterpolator = new AccelerateInterpolator();
+        }
+        if (animatorListener==null){
+            animatorListener=new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animator) {
 
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animator) {
+                    if (mOnAnimatorEndListener != null) {
+                        mAnimator.removeAllListeners();
+                        mOnAnimatorEndListener.onAnimatorEnd();
+                    }
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animator) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animator) {
+
+                }
+            };
+        }
         mAnimator = new AnimatorSet();
         mAnimator.playTogether(radiusAnimator, alphaAnimator, circleAlphaAnimator);
         mAnimator.setDuration(3500);
-        mAnimator.setInterpolator(new AccelerateInterpolator());
-        mAnimator.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                if (mOnAnimatorEndListener != null) {
-                    mAnimator.removeAllListeners();
-                    mOnAnimatorEndListener.onAnimatorEnd();
-                }
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
-        });
+        mAnimator.setInterpolator(accelerateInterpolator);
+        mAnimator.addListener(animatorListener);
     }
 
 
