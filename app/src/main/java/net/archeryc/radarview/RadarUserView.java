@@ -1,16 +1,15 @@
 package net.archeryc.radarview;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
+
+import com.facebook.drawee.view.SimpleDraweeView;
 
 /**
  * 一句话功能简述
@@ -29,6 +28,8 @@ public class RadarUserView extends FrameLayout {
 
     private RippleView rippleView;
 
+    private SimpleDraweeView sdvAvatar;
+
     public RadarUserView(@NonNull Context context) {
         this(context, null);
     }
@@ -46,6 +47,7 @@ public class RadarUserView extends FrameLayout {
     private void init() {
         view = LayoutInflater.from(mContext).inflate(R.layout.radar_user, this, false);
         rippleView = (RippleView) view.findViewById(R.id.rippleView);
+        sdvAvatar = (SimpleDraweeView) view.findViewById(R.id.avatar);
         addView(view);
     }
 
@@ -54,9 +56,10 @@ public class RadarUserView extends FrameLayout {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
-    public void startRipple() {
-        rippleView.initAnimator((getMeasuredWidth()-dip2px(mContext,8)) / 2, getMeasuredWidth() / 2, 0);
+    public void startRipple(RippleView.OnAnimatorEndListener onAnimatorEndListener) {
+        rippleView.initAnimator(sdvAvatar.getMeasuredWidth() / 2, getMeasuredWidth() / 2, sdvAvatar.getMeasuredWidth() / 2, 0);
         rippleView.startRipple();
+        rippleView.setOnAnimatorEndListener(onAnimatorEndListener);
     }
 
     public void stopRipple() {

@@ -10,10 +10,12 @@
         android:layout_height="match_parent" />
 
     <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/avatar"
         android:layout_width="45dp"
         android:layout_height="45dp"
         android:layout_centerInParent="true"
         fresco:placeholderImage="@mipmap/aa"
+        android:visibility="visible"
         fresco:roundAsCircle="true" />
 
 

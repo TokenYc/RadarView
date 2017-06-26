@@ -12,6 +12,7 @@ import android.widget.FrameLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * 一句话功能简述
@@ -109,10 +110,23 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
                 if (i<circlePositions.size()) {
                     Point point = circlePositions.get(i);
                     radarUserViews.get(i).layout(point.x - width / 2, point.y - height / 2, point.x + width / 2, point.y + height / 2);
-                    radarUserViews.get(i).startRipple();
                 }
             }
+                    radarUserViews.get(0).startRipple(null);
+//            startRandomRipple();
         }
+    }
+
+    private void startRandomRipple() {
+        Random random = new Random();
+        int position=random.nextInt(radarUserViews.size());
+        RadarUserView radarUserView = radarUserViews.get(position);
+        radarUserView.startRipple(new RippleView.OnAnimatorEndListener() {
+            @Override
+            public void onAnimatorEnd() {
+                startRandomRipple();
+            }
+        });
     }
 
     @Override
