@@ -49,8 +49,14 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                radarView.clear();
-
+                radarView.showLoading();
+                radarView.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        radarView.stopLoading();
+                        radarView.setUserData(radarUserEntities);
+                    }
+                }, 1000);
             }
         });
     }

@@ -56,17 +56,20 @@ public class RadarUserView extends FrameLayout {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
-    public void startRipple(RippleView.OnAnimatorEndListener onAnimatorEndListener) {
+    public void setOnAnimatorEndListener(RippleView.OnAnimatorEndListener onAnimatorEndListener) {
+        rippleView.setOnAnimatorEndListener(onAnimatorEndListener);
+    }
+
+    public void startRipple() {
         rippleView.initAnimator(sdvAvatar.getMeasuredWidth() / 2, getMeasuredWidth() / 2, sdvAvatar.getMeasuredWidth() / 2, 0);
         rippleView.startRipple();
-        rippleView.setOnAnimatorEndListener(onAnimatorEndListener);
     }
 
     public void stopRipple() {
         rippleView.stopRipple();
     }
 
-    public void clear(){
+    public void clear() {
         rippleView.clear();
     }
 

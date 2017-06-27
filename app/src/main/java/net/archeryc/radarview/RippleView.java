@@ -109,6 +109,7 @@ public class RippleView extends View {
 
     public void stopRipple() {
         if (mAnimator != null) {
+            mAnimator.end();
             mAnimator.cancel();
         }
         mOnAnimatorEndListener=null;
@@ -190,8 +191,10 @@ public class RippleView extends View {
 
     public void clear(){
         if (mAnimator!=null) {
+            mAnimator.end();
             mAnimator.removeAllListeners();
         }
+        mOnAnimatorEndListener=null;
     }
 
     private int dip2px(Context context, float dipValue) {

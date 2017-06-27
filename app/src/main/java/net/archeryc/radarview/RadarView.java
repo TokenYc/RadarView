@@ -184,17 +184,7 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
         }
         int position = random.nextInt(radarUserViews.size());
         final RadarUserView radarUserView = radarUserViews.get(position);
-
-        if (mOnAnimatorEndListener == null) {
-            mOnAnimatorEndListener = new RippleView.OnAnimatorEndListener() {
-                @Override
-                public void onAnimatorEnd() {
-                    radarUserView.stopRipple();
-                    startRandomRipple();
-                }
-            };
-        }
-        radarUserView.startRipple(mOnAnimatorEndListener);
+        radarUserView.startRipple();
     }
 
     @Override
@@ -213,7 +203,17 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
         this.radarUserEntities = userEntities;
         for (int i = 0; i < userEntities.size(); i++) {
             RadarUserEntity userEntity = userEntities.get(i);
-            RadarUserView radarUserView = new RadarUserView(mContext);
+            final RadarUserView radarUserView = new RadarUserView(mContext);
+            if (mOnAnimatorEndListener == null) {
+                mOnAnimatorEndListener = new RippleView.OnAnimatorEndListener() {
+                    @Override
+                    public void onAnimatorEnd() {
+                        radarUserView.stopRipple();
+                        startRandomRipple();
+                    }
+                };
+            }
+            radarUserView.setOnAnimatorEndListener(mOnAnimatorEndListener);
             radarUserViews.add(radarUserView);
         }
         if (random == null) {
