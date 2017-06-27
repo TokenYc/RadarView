@@ -62,10 +62,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        if (radarView!=null){
-            radarView.clear();
-        }
-        super.onDestroy();
+    protected void onStop() {
+        super.onStop();
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
 }

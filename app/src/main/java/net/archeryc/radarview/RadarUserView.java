@@ -77,4 +77,10 @@ public class RadarUserView extends FrameLayout {
         final float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dipValue * scale + 0.5f);
     }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        clear();
+    }
 }

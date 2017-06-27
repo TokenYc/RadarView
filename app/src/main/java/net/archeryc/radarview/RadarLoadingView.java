@@ -1,6 +1,7 @@
 package net.archeryc.radarview;
 
 import android.animation.Animator;
+import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
@@ -32,9 +33,15 @@ public class RadarLoadingView extends View {
     private int defaultWidth;
     private int defaultHeight;
     private Paint[] circlePaints;
+
     private ObjectAnimator[] circleAnimators;
+    private ObjectAnimator[] circleAlphaAnimators;
+    private AnimatorSet[] animatorSets;
+
     private float[] animatorValues;
     private float[] circleRadius;
+    private ValueAnimator.AnimatorUpdateListener[] animateUpdateListeners;
+    private Animator.AnimatorListener[] animatorListeners;
     private boolean isPlayAnimator = false;
     private boolean shouldStopAnimator = false;
     private OnLoadingStateChangedListener mOnLoadingStateChangedListener;
@@ -129,90 +136,113 @@ public class RadarLoadingView extends View {
             mOnLoadingStateChangedListener.onLoadingStart();
         }
         setPlayAnimator(true);
-        circleAnimators = new ObjectAnimator[CIRCLE_NUM];
-        animatorValues = new float[CIRCLE_NUM];
-        circleRadius = new float[CIRCLE_NUM];
+        if (circleAnimators == null) {
+            circleAnimators = new ObjectAnimator[CIRCLE_NUM];
+        }
+        if (animatorValues == null) {
+            animatorValues = new float[CIRCLE_NUM];
+        }
+        if (circleRadius == null) {
+            circleRadius = new float[CIRCLE_NUM];
+        }
+        if (animateUpdateListeners==null){
+            animateUpdateListeners = new ValueAnimator.AnimatorUpdateListener[CIRCLE_NUM];
+        }
+        if (animatorListeners==null){
+            animatorListeners=new  Animator.AnimatorListener[CIRCLE_NUM];
+        }
         circleRadius[4] = dip2px(mContext, 34);
         circleRadius[3] = dip2px(mContext, 68);
         circleRadius[2] = dip2px(mContext, 118);
         circleRadius[1] = getMeasuredWidth() / 2;
         circleRadius[0] = dip2px(mContext, 248);
         for (int i = 0; i < CIRCLE_NUM; i++) {
-            circleAnimators[i] = ObjectAnimator
-                    .ofFloat(this, "yc", circleRadius[i] / 3.5f, circleRadius[0] * 2 / (2 + (float) i * i * i / 8))
-                    .setDuration(1600);
-            circleAnimators[i].setRepeatCount(ValueAnimator.INFINITE);
-            circleAnimators[i].setInterpolator(new AccelerateInterpolator((float) (i + 1) / CIRCLE_NUM));
-            circleAnimators[i].start();
+            if (circleAnimators[i] == null) {
+                circleAnimators[i] = ObjectAnimator
+                        .ofFloat(this, "yc", circleRadius[i] / 3.5f, circleRadius[0] * 2 / (2 + (float) i * i * i / 8))
+                        .setDuration(1600);
+                circleAnimators[i].setRepeatCount(ValueAnimator.INFINITE);
+                circleAnimators[i].setInterpolator(new AccelerateInterpolator((float) (i + 1) / CIRCLE_NUM));
+            }
+            circleAnimators[i].removeAllListeners();
             final int finalI = i;
-            circleAnimators[i].addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    animatorValues[finalI] = (Float) animation.getAnimatedValue();
+            if (animateUpdateListeners[i]==null){
+                animateUpdateListeners[i]=new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        animatorValues[finalI] = (Float) animation.getAnimatedValue();
 //                    Log.d("yc", finalI + "===>" + animatorValues[finalI]/
 //                            (getMeasuredWidth()/2));
-                    float percent = (animatorValues[finalI] - circleRadius[finalI] / 3.5f) / (circleRadius[0] * 2 / (2 + (float) finalI * finalI * finalI / 8) - circleRadius[finalI] / 3.5f);
-                    Log.d("yc", "i"+finalI+"percent===>" + percent);
-                    int alpha;
-                    if (percent < 0.5f) {
-                        alpha = (int) (255 * (percent * 2) * (1 - (float) finalI / 4.5));
-                    } else {
-                        alpha = (int) (255 * (0.8 - percent) * 2 * (1 - (float) finalI /4.5));
+                        float percent = (animatorValues[finalI] - circleRadius[finalI] / 3.5f) / (circleRadius[0] * 2 / (2 + (float) finalI * finalI * finalI / 8) - circleRadius[finalI] / 3.5f);
+                        int alpha;
+                        if (percent < 0.5f) {
+                            alpha = (int) (255 * (percent * 2) * (1 - (float) finalI / 4.5));
+                        } else {
+                            alpha = (int) (255 * (0.8 - percent) * 2 * (1 - (float) finalI / 4.5));
+                        }
+                        if (alpha < 0) {
+                            alpha = 0;
+                        }
+                        Log.d("yc", "i===>" + finalI + "alpha====>" + alpha);
+                        circlePaints[finalI].setAlpha(alpha);
+                        invalidate();
                     }
-                    if (alpha<0){
-                        alpha=0;
+                };
+            }
+            circleAnimators[i].addUpdateListener(animateUpdateListeners[i]);
+            if (animatorListeners[i]==null){
+                animatorListeners[i]=new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+                        Log.d("yc", "onAnimationStart");
                     }
-                    Log.d("yc", "i===>"+finalI + "alpha====>" + alpha);
-                    circlePaints[finalI].setAlpha(alpha);
-                    invalidate();
-                }
-            });
-            circleAnimators[i].addListener(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(Animator animation) {
-                    Log.d("yc", "onAnimationStart");
-                }
 
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    Log.d("yc", "onAnimationEnd");
-                }
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        Log.d("yc", "onAnimationEnd");
+                    }
 
-                @Override
-                public void onAnimationCancel(Animator animation) {
-                    Log.d("yc", "onAnimationCancel");
-                }
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        Log.d("yc", "onAnimationCancel");
+                    }
 
-                @Override
-                public void onAnimationRepeat(Animator animation) {
-                    Log.d("yc", "onAnimationRepeat");
-                    //判断是否终止了动画，保证一次动画可以完整走完
-                    if (isShouldStopAnimator()) {
-                        cancelAnimator(animation);
-                        if (mOnLoadingStateChangedListener != null) {
-                            mOnLoadingStateChangedListener.onLoadingStop();
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {
+                        Log.d("yc", "onAnimationRepeat");
+                        //判断是否终止了动画，保证一次动画可以完整走完
+                        if (isShouldStopAnimator()) {
+                            cancelAnimator(animation);
+                            if (mOnLoadingStateChangedListener != null) {
+                                mOnLoadingStateChangedListener.onLoadingStop();
+                            }
+                        }
+                        if (!isPlayAnimator()) {
+                            cancelAnimator(animation);
                         }
                     }
-                    if (!isPlayAnimator()) {
-                        cancelAnimator(animation);
+
+                    private void cancelAnimator(Animator animation) {
+                        setShouldStopAnimator(false);
+                        setPlayAnimator(false);
+                        ObjectAnimator objectAnimator = (ObjectAnimator) animation;
+                        objectAnimator.removeAllUpdateListeners();
+                        objectAnimator.removeAllListeners();
+                        objectAnimator.cancel();
                     }
-                }
-
-                private void cancelAnimator(Animator animation) {
-                    setShouldStopAnimator(false);
-                    setPlayAnimator(false);
-                    ObjectAnimator objectAnimator = (ObjectAnimator) animation;
-                    objectAnimator.removeAllUpdateListeners();
-                    objectAnimator.removeAllListeners();
-                    objectAnimator.cancel();
-                }
-            });
-
+                };
+            }
+            circleAnimators[i].addListener(animatorListeners[i]);
+            circleAnimators[i].start();
         }
     }
 
     public void stopLoading() {
         setShouldStopAnimator(true);
+    }
+
+    public void release(){
+
     }
 
 

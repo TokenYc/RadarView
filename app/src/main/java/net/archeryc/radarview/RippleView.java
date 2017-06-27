@@ -85,12 +85,14 @@ public class RippleView extends View {
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        Log.d("yc", "onDetachedFromWindow");
         stopRipple();
     }
 
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        Log.d("yc", "onAttachedToWindow");
         startRipple();
     }
 
@@ -190,11 +192,12 @@ public class RippleView extends View {
     }
 
     public void clear(){
+        mOnAnimatorEndListener=null;
         if (mAnimator!=null) {
             mAnimator.end();
+            mAnimator.cancel();
             mAnimator.removeAllListeners();
         }
-        mOnAnimatorEndListener=null;
     }
 
     private int dip2px(Context context, float dipValue) {

@@ -242,6 +242,7 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
         radarLoadingView = new RadarLoadingView(mContext);
         radarLoadingView.setOnLoadingStateChangedListener(this);
         addView(radarLoadingView, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+        addView(LayoutInflater.from(mContext).inflate(R.layout.radar_self_avatar, this, false));
         radarLoadingView.showLoading();
     }
 
@@ -256,9 +257,6 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
     @Override
     public void onLoadingStart() {
         Log.d("yc", "onLoadingStart");
-        removeAllViews();
-        addView(radarLoadingView);
-        addView(LayoutInflater.from(mContext).inflate(R.layout.radar_self_avatar, this, false));
 
         setDrawBgCircle(false);
         invalidate();
@@ -321,5 +319,11 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
                 radarUserView.clear();
             }
         }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        clear();
     }
 }
