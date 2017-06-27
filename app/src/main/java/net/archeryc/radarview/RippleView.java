@@ -109,9 +109,9 @@ public class RippleView extends View {
 
     public void stopRipple() {
         if (mAnimator != null) {
-            mAnimator.end();
             mAnimator.cancel();
         }
+        mOnAnimatorEndListener=null;
     }
 
     //设置水波纹半径
@@ -162,15 +162,17 @@ public class RippleView extends View {
 
                 @Override
                 public void onAnimationEnd(Animator animator) {
+                    Log.d("yc","onAnimationEnd====>");
+                    animator.removeAllListeners();
                     if (mOnAnimatorEndListener != null) {
-                        mAnimator.removeAllListeners();
                         mOnAnimatorEndListener.onAnimatorEnd();
                     }
                 }
 
                 @Override
                 public void onAnimationCancel(Animator animator) {
-
+                    Log.d("yc","onAnimationCancel====>");
+                    animator.removeAllListeners();
                 }
 
                 @Override
@@ -186,6 +188,11 @@ public class RippleView extends View {
         mAnimator.addListener(animatorListener);
     }
 
+    public void clear(){
+        if (mAnimator!=null) {
+            mAnimator.removeAllListeners();
+        }
+    }
 
     private int dip2px(Context context, float dipValue) {
         final float scale = context.getResources().getDisplayMetrics().density;
@@ -199,4 +206,5 @@ public class RippleView extends View {
     public void setOnAnimatorEndListener(OnAnimatorEndListener listener) {
         this.mOnAnimatorEndListener = listener;
     }
+
 }

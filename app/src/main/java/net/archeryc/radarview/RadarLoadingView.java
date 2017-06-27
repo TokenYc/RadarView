@@ -59,7 +59,7 @@ public class RadarLoadingView extends View {
         for (int i = 0; i < circlePaints.length; i++) {
             circlePaints[i] = new Paint(Paint.ANTI_ALIAS_FLAG);
             circlePaints[i].setStrokeWidth(dip2px(mContext, 1));
-            circlePaints[i].setColor(Color.WHITE);
+            circlePaints[i].setColor(Color.parseColor("#A59FA7"));
             circlePaints[i].setStyle(Paint.Style.STROKE);
         }
     }
@@ -140,7 +140,7 @@ public class RadarLoadingView extends View {
         for (int i = 0; i < CIRCLE_NUM; i++) {
             circleAnimators[i] = ObjectAnimator
                     .ofFloat(this, "yc", circleRadius[i] / 3.5f, circleRadius[0] * 2 / (2 + (float) i * i * i / 8))
-                    .setDuration(1400);
+                    .setDuration(1600);
             circleAnimators[i].setRepeatCount(ValueAnimator.INFINITE);
             circleAnimators[i].setInterpolator(new AccelerateInterpolator((float) (i + 1) / CIRCLE_NUM));
             circleAnimators[i].start();
@@ -152,13 +152,17 @@ public class RadarLoadingView extends View {
 //                    Log.d("yc", finalI + "===>" + animatorValues[finalI]/
 //                            (getMeasuredWidth()/2));
                     float percent = (animatorValues[finalI] - circleRadius[finalI] / 3.5f) / (circleRadius[0] * 2 / (2 + (float) finalI * finalI * finalI / 8) - circleRadius[finalI] / 3.5f);
+                    Log.d("yc", "i"+finalI+"percent===>" + percent);
                     int alpha;
                     if (percent < 0.5f) {
-                        alpha = (int) (255 * (percent * 2) * (1 - (float) finalI / 7));
+                        alpha = (int) (255 * (percent * 2) * (1 - (float) finalI / 4.5));
                     } else {
-                        alpha = (int) (255 * (1 - percent) * 2 * (1 - (float) finalI /7));
+                        alpha = (int) (255 * (0.8 - percent) * 2 * (1 - (float) finalI /4.5));
                     }
-//                    Log.d("yc", "i===>"+finalI+"percent===>" + percent + "alpha====>" + alpha);
+                    if (alpha<0){
+                        alpha=0;
+                    }
+                    Log.d("yc", "i===>"+finalI + "alpha====>" + alpha);
                     circlePaints[finalI].setAlpha(alpha);
                     invalidate();
                 }
