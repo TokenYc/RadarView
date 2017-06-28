@@ -31,11 +31,11 @@ public class MainActivity extends AppCompatActivity {
         radarUserEntities.add(new RadarUserEntity());
         radarUserEntities.add(new RadarUserEntity());
         radarUserEntities.add(new RadarUserEntity());
-        radarUserEntities.add(new RadarUserEntity());
-        radarUserEntities.add(new RadarUserEntity());
-        radarUserEntities.add(new RadarUserEntity());
-        radarUserEntities.add(new RadarUserEntity());
-        radarUserEntities.add(new RadarUserEntity());
+//        radarUserEntities.add(new RadarUserEntity());
+//        radarUserEntities.add(new RadarUserEntity());
+//        radarUserEntities.add(new RadarUserEntity());
+//        radarUserEntities.add(new RadarUserEntity());
+//        radarUserEntities.add(new RadarUserEntity());
 
 
         radarView.showLoading();
