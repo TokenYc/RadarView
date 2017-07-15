@@ -9,6 +9,10 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.OvershootInterpolator;
+import android.view.animation.ScaleAnimation;
+import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 
 import java.util.ArrayList;
@@ -54,6 +58,8 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
     private List<Point> circlePositions3;
 
     private int currentPlan = 0;
+
+    private boolean isReadyToRipple=false;
 
 
     private Random random;
@@ -174,7 +180,9 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
                     radarUserViews.get(i).layout(point.x - width / 2, point.y - height / 2, point.x + width / 2, point.y + height / 2);
                 }
             }
-            startRandomRipple();
+            if (isReadyToRipple) {
+                startRandomRipple();
+            }
         }
     }
 
@@ -267,10 +275,24 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
         Log.d("yc", "onLoadingStop");
         removeAllViews();
         addView(LayoutInflater.from(mContext).inflate(R.layout.radar_self_avatar, this, false));
-        for (RadarUserView radarUserView : radarUserViews) {
-            addView(radarUserView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        for (int i=0;i<radarUserViews.size();i++){
+            final int finalI = i;
+            postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    RadarUserView radarUserView = radarUserViews.get(finalI);
+                    addView(radarUserView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                    ScaleAnimation tAnim = new ScaleAnimation(0.3f, 1.0f, 0.3f, 1.0f, Animation.RELATIVE_TO_SELF,0.5f,Animation.RELATIVE_TO_SELF,0.5f);
+                    tAnim.setInterpolator(new OvershootInterpolator());
+                    tAnim.setDuration(1000);
+                    radarUserView.startAnimation(tAnim);
+                    if(finalI==radarUserViews.size()-1){
+                        isReadyToRipple=true;
+                        requestLayout();
+                    }
+                }
+            },finalI/2*700);
         }
-        requestLayout();
         setDrawBgCircle(true);
         invalidate();
     }
@@ -319,7 +341,9 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
                 radarUserView.clear();
             }
         }
+        isReadyToRipple=false;
     }
+
 
     @Override
     protected void onDetachedFromWindow() {
