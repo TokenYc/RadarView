@@ -114,7 +114,7 @@ public class RippleView extends View {
             mAnimator.end();
             mAnimator.cancel();
         }
-        mOnAnimatorEndListener=null;
+//        mOnAnimatorEndListener=null;
     }
 
     //设置水波纹半径
