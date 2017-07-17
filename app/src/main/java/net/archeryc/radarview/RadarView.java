@@ -284,7 +284,7 @@ public class RadarView extends FrameLayout implements RadarLoadingView.OnLoading
                     addView(radarUserView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                     ScaleAnimation tAnim = new ScaleAnimation(0.3f, 1.0f, 0.3f, 1.0f, Animation.RELATIVE_TO_SELF,0.5f,Animation.RELATIVE_TO_SELF,0.5f);
                     tAnim.setInterpolator(new OvershootInterpolator());
-                    tAnim.setDuration(1000);
+                    tAnim.setDuration(600);
                     radarUserView.startAnimation(tAnim);
                     if(finalI==radarUserViews.size()-1){
                         isReadyToRipple=true;
